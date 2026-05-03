@@ -8,14 +8,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ruaruu_db01
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: porto_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
 
-  # 2. Backend Go
+  # 2. Backend golang
   backend:
     build:
       context: ./backend
@@ -25,10 +21,10 @@ services:
       - "8080:8080"
     environment:
       - DB_USER=postgres
-      - DB_PASSWORD=ruaruu_db01
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=porto_db
       - DB_HOST=db
-      - JWT_SECRET=super_rahasia_aruu_2026_backend
+      - JWT_SECRET=${JWT_SECRET}
       - PORT=8080
     depends_on:
       - db
