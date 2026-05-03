@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. Database PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: porto_db_container
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ruaruu_db01
+      POSTGRES_DB: porto_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Backend Go
+  backend:
+    build:
+      context: ./backend
+    container_name: porto_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=ruaruu_db01
+      - DB_NAME=porto_db
+      - DB_HOST=db
+      - JWT_SECRET=super_rahasia_aruu_2026_backend
+      - PORT=8080
+    depends_on:
+      - db
+
+  # 3. Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend
+    container_name: porto_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
