@@ -37,16 +37,16 @@ func main() {
 	// 2. Setup Router
 	mux := http.NewServeMux()
 
-	//auth enpoints
-	mux.HandleFunc("api/v1/auth/login", func(w http.ResponseWriter, r *http.Request) {
+	// Auth endpoints
+	mux.HandleFunc("/api/v1/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			authHandler.Login(w, r)
 		} else {
-			http.Error(w, "Method not found", http.StatusMethodNotAllowed)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	// Project enpoints
+	// Project endpoints
 	mux.HandleFunc("/api/v1/projects", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -58,7 +58,8 @@ func main() {
 		}
 	})
 
-	handler := middleware.Logger(middleware.CORS(mux))
+	// Protection layer
+	handler := middleware.CORS(middleware.RateLimiter(middleware.Logger(mux)))
 
 	// 3. Start Server
 	port := os.Getenv("PORT")

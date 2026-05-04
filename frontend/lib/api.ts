@@ -1,6 +1,10 @@
 import type { ApiResponse, Project, PlaygroundResponse, HttpMethod } from "@/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const isServer = typeof window === "undefined";
+
+const BASE_URL = isServer
+    ? (process.env.API_INTERNAL_URL ?? "http://backend:8080") // Alamat internal Docker
+    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"); // Alamat dari laptop/browser
 
 // ─── Generic fetch wrapper
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
@@ -9,6 +13,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
         ...options,
     });
     if (!res.ok) {
+        const errorBody = await res.text()
         throw new Error(`HTTP ${res.status} — ${res.statusText}`);
     }
     return res.json() as Promise<T>;

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 	"web-porto-backend/internal/model"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -26,6 +27,7 @@ func (r *projectRepository) GetFeatured(ctx context.Context) ([]model.Project, e
 
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
+		log.Println("Error captured from DB:", err)
 		return nil, err
 	}
 	defer rows.Close()

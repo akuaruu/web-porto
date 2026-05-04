@@ -11,7 +11,7 @@ import {
   SkillsWidget,
   AvailabilityWidget,
   ActivityLogWidget,
-  PhilosophyCard,
+  TelemetryCard,
 } from "@/app/components/Widgets";
 import { ApiPlayground } from "@/app/components/ApiPlayground";
 import { fetchProjects } from "@/lib/api";
@@ -147,7 +147,7 @@ export default function Dashboard() {
         {/* ── Bottom row ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ActivityLogWidget />
-          <PhilosophyCard />
+          <TelemetryCard />
         </div>
 
         {/* ── Footer ── */}

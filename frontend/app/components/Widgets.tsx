@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Activity,
@@ -12,6 +12,8 @@ import {
   Code2,
   Terminal,
   Clock,
+  Zap,
+  ShieldAlert,
 } from "lucide-react";
 
 // Shared BentoCard wrapper 
@@ -35,11 +37,10 @@ export function BentoCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ scale: 1.015 }}
-      className={`relative rounded-2xl border border-white/5 bg-[#111111] overflow-hidden transition-shadow duration-300 ${
-        glow
-          ? "hover:shadow-[0_0_32px_0_rgba(57,255,20,0.10)] hover:border-[#39ff14]/20"
-          : "hover:shadow-[0_0_20px_0_rgba(255,255,255,0.04)] hover:border-white/10"
-      } ${className}`}
+      className={`relative rounded-2xl border border-white/5 bg-[#111111] overflow-hidden transition-shadow duration-300 ${glow
+        ? "hover:shadow-[0_0_32px_0_rgba(57,255,20,0.10)] hover:border-[#39ff14]/20"
+        : "hover:shadow-[0_0_20px_0_rgba(255,255,255,0.04)] hover:border-white/10"
+        } ${className}`}
     >
       {children}
     </motion.div>
@@ -68,10 +69,10 @@ function PulseDot({ delay = 0, color = "#39ff14" }: { delay?: number; color?: st
 // ─── SystemStatusWidget 
 
 const SERVICES = [
-  { name: "API Server",  sub: "Go · :8080",      icon: Server,   color: "#00acd7", delay: 0 },
-  { name: "PostgreSQL",  sub: "DB · :5432",       icon: Database, color: "#4f9ac4", delay: 0.4 },
-  { name: "Linux Host",  sub: "Pop!_OS 22.04",    icon: Cpu,      color: "#f5a623", delay: 0.8 },
-  { name: "Network",     sub: "Outbound OK",      icon: Wifi,     color: "#39ff14", delay: 1.2 },
+  { name: "API Server", sub: "Go · :8080", icon: Server, color: "#00acd7", delay: 0 },
+  { name: "PostgreSQL", sub: "DB · :5432", icon: Database, color: "#4f9ac4", delay: 0.4 },
+  { name: "Linux Host", sub: "Pop!_OS 22.04", icon: Cpu, color: "#f5a623", delay: 0.8 },
+  { name: "Network", sub: "Outbound OK", icon: Wifi, color: "#39ff14", delay: 1.2 },
 ];
 
 export function SystemStatusWidget() {
@@ -125,11 +126,11 @@ export function SystemStatusWidget() {
 
 const SKILLS = [
   { label: "REST API Design", pct: 92 },
-  { label: "Golang",          pct: 90 },
-  { label: "Linux / Bash",    pct: 85 },
-  { label: "PostgreSQL",      pct: 82 },
-  { label: "Docker",          pct: 75 },
-  { label: "Git",             pct: 88 },
+  { label: "Golang", pct: 90 },
+  { label: "Linux / Bash", pct: 85 },
+  { label: "PostgreSQL", pct: 82 },
+  { label: "Docker", pct: 75 },
+  { label: "Git", pct: 88 },
 ];
 
 export function SkillsWidget() {
@@ -199,12 +200,12 @@ export function AvailabilityWidget() {
         <div className="rounded-xl bg-[#0a0a0a] border border-white/5 p-3 space-y-2">
           {[
             ["Target Role", "Backend Intern"],
-            ["Period",      "Summer 2026"],
-            ["Mode",        "Remote / Hybrid"],
+            ["Period", "Summer 2026"],
+            ["Mode", "Remote / Hybrid"],
           ].map(([label, val]) => (
             <div key={label} className="flex justify-between font-mono text-[10px]">
               <span className="text-white/30">{label}</span>
-              <span className="text-white/70">{val}</span>
+              <span classNamecondition="text-white/70">{val}</span>
             </div>
           ))}
           <div className="flex justify-between font-mono text-[10px]">
@@ -234,10 +235,10 @@ const LOGS = [
 
 const LEVEL_COLOR: Record<string, string> = {
   "OK  ": "text-[#39ff14]",
-  INFO:   "text-[#00acd7]",
+  INFO: "text-[#00acd7]",
   "GET ": "text-[#f5a623]",
-  WARN:   "text-yellow-400",
-  ERR:    "text-red-400",
+  WARN: "text-yellow-400",
+  ERR: "text-red-400",
 };
 
 export function ActivityLogWidget() {
@@ -302,42 +303,99 @@ export function ActivityLogWidget() {
   );
 }
 
-// ─── PhilosophyCard 
+// ─── Telemetrycard
 
-const PHILOSOPHY_LINES = [
-  { cmd: "$ cat philosophy.md",  out: "Build systems that are boring to operate and exciting to develop." },
-  { cmd: "$ echo $STACK",        out: "Go · PostgreSQL · Docker · Linux · REST" },
-  { cmd: "$ uptime",             out: "Consistently curious. Always shipping." },
-];
+export function TelemetryCard() {
+  const [successReq, setSuccessReq] = useState(0);
+  const [blockedReq, setBlockedReq] = useState(0);
+  const [latency, setLatency] = useState(12);
 
-export function PhilosophyCard() {
+  useEffect(() => {
+
+    const pingInterval = setInterval(() => {
+      setLatency(Math.floor(Math.random() * 15) + 5);
+    }, 2000);
+
+
+    const handleTelemetry = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail === "success") {
+        setSuccessReq((prev) => prev + 1);
+      } else if (customEvent.detail === "blocked") {
+        setBlockedReq((prev) => prev + 1);
+      }
+    };
+
+    window.addEventListener("telemetry", handleTelemetry);
+
+    return () => {
+      clearInterval(pingInterval);
+      window.removeEventListener("telemetry", handleTelemetry);
+    };
+  }, []);
+
   return (
     <BentoCard className="p-5" delay={0.35}>
-      <div className="mb-4 flex items-center gap-2">
-        <Terminal size={13} className="text-[#39ff14]" />
-        <span className="font-mono text-xs font-semibold text-white/70 uppercase tracking-widest">
-          Philosophy
-        </span>
+      {/* Header Panel */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Activity size={13} className="text-[#39ff14] animate-pulse" />
+          <span className="font-mono text-xs font-semibold text-white/70 uppercase tracking-widest">
+            Live Telemetry
+          </span>
+        </div>
+        {/* Indikator Status*/}
+        <div className="flex items-center gap-1.5">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#39ff14] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#39ff14]"></span>
+          </span>
+          <span className="font-mono text-[9px] text-[#39ff14] tracking-wider">ONLINE</span>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {PHILOSOPHY_LINES.map((item, i) => (
+      {/* Grid Metrik Data */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* KRequest Success box*/}
+        <div className="bg-white/5 rounded-md p-2.5 border border-white/5 transition-all hover:border-[#00acd7]/30">
+          <div className="flex items-center gap-1.5 mb-1.5 text-white/40">
+            <Zap size={10} className="text-[#00acd7]" />
+            <span className="font-mono text-[9px] uppercase tracking-wider">Success (200)</span>
+          </div>
+          <div className="font-mono text-xl text-[#00acd7]">
+            {successReq}
+          </div>
+        </div>
+
+        {/* Request Declined (Rate Limit) */}
+        <div className="bg-red-500/5 rounded-md p-2.5 border border-red-500/10 transition-all hover:border-red-500/30">
+          <div className="flex items-center gap-1.5 mb-1.5 text-red-400/60">
+            <ShieldAlert size={10} className="text-red-400" />
+            <span className="font-mono text-[9px] uppercase tracking-wider">Blocked (429)</span>
+          </div>
+          <div className="font-mono text-xl text-red-400">
+            {blockedReq}
+          </div>
+        </div>
+      </div>
+
+      {/* Latancy BAr*/}
+      <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
+        <div className="flex items-center justify-between font-mono text-[10px]">
+          <span className="text-white/40 flex items-center gap-1.5">
+            <Server size={10} /> Go Runtime Engine
+          </span>
+          <span className="text-[#39ff14]">{latency} ms ping</span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
           <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + i * 0.12, ease: "easeOut" }}
-            className="space-y-0.5"
-          >
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#39ff14] text-[10px]">›</span>
-              <span className="font-mono text-[10px] text-[#00acd7]">{item.cmd}</span>
-            </div>
-            <p className="font-mono text-[11px] text-white/40 pl-3 leading-relaxed">
-              {item.out}
-            </p>
-          </motion.div>
-        ))}
+            className="bg-[#39ff14] h-full"
+            animate={{ width: `${Math.max(5, latency * 3)}%` }}
+            transition={{ type: "tween", ease: "linear", duration: 1 }}
+          />
+        </div>
       </div>
     </BentoCard>
   );

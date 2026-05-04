@@ -23,7 +23,7 @@ import type {
     RequestHistoryEntry,
 } from "@/types";
 
-// ─── Endpoint Registry ────────────────────────────────────────────────────────
+// ─── Endpoint Registry 
 
 const ENDPOINTS: EndpointDefinition[] = [
     {
@@ -69,25 +69,9 @@ const ENDPOINTS: EndpointDefinition[] = [
         description: "Verify the API server is alive and responsive.",
         group: "System",
     },
-    {
-        id: "list-notes",
-        label: "List Notes",
-        method: "GET",
-        path: "/api/v1/notes",
-        description: "Returns all note entries.",
-        group: "Notes",
-    },
-    {
-        id: "list-activities",
-        label: "List Activities",
-        method: "GET",
-        path: "/api/v1/activities",
-        description: "Fetch recent activity log entries.",
-        group: "Activity",
-    },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers
 
 const METHOD_STYLES: Record<HttpMethod, string> = {
     GET: "text-[#39ff14]   bg-[#39ff14]/10   border-[#39ff14]/25",
@@ -140,7 +124,7 @@ function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
     }, {} as Record<string, T[]>);
 }
 
-// ─── JSON Syntax Highlighter ──────────────────────────────────────────────────
+// ─── JSON Syntax Highlighter 
 
 function highlightJson(json: string): React.ReactNode {
     const lines = json.split("\n");
@@ -175,7 +159,7 @@ function highlightJson(json: string): React.ReactNode {
     });
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Sub-components 
 
 function MethodBadge({ method }: { method: HttpMethod }) {
     return (
@@ -206,7 +190,7 @@ function CopyButton({ text }: { text: string }) {
     );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component 
 
 export function ApiPlayground() {
     const [selected, setSelected] = useState<EndpointDefinition>(ENDPOINTS[0]);
@@ -257,6 +241,37 @@ export function ApiPlayground() {
             },
             ...prev.slice(0, 9),
         ]);
+    }, [loading, selected, resolvedUrl, body]);
+
+    const spamAttack = useCallback(async () => {
+        if (loading) return;
+        setLoading(true);
+        setResponse(null);
+
+        // Tembak 50 request sekaligus secara brutal!
+        const totalSpam = 1000;
+        const promises = Array.from({ length: totalSpam }).map(async () => {
+            // Kita serang endpoint yang sedang dipilih
+            const result = await executePlaygroundRequest(
+                selected.method,
+                resolvedUrl,
+                body || undefined
+            );
+
+            // Laporkan ke Telemetry Card
+            if (result.statusCode === 429) {
+                window.dispatchEvent(new CustomEvent("telemetry", { detail: "blocked" }));
+            } else if (result.statusCode >= 200 && result.statusCode < 300) {
+                window.dispatchEvent(new CustomEvent("telemetry", { detail: "success" }));
+            }
+
+            return result;
+        });
+
+        // Tunggu semua tembakan selesai, lalu tampilkan hasil tembakan terakhir
+        const results = await Promise.all(promises);
+        setResponse(results[results.length - 1]);
+        setLoading(false);
     }, [loading, selected, resolvedUrl, body]);
 
     const grouped = groupBy(ENDPOINTS, (e) => e.group);
@@ -310,8 +325,8 @@ export function ApiPlayground() {
                                         whileHover={{ x: 2 }}
                                         onClick={() => selectEndpoint(ep)}
                                         className={`w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors ${selected.id === ep.id
-                                                ? "bg-[#39ff14]/8 border border-[#39ff14]/15"
-                                                : "border border-transparent hover:bg-white/3 hover:border-white/5"
+                                            ? "bg-[#39ff14]/8 border border-[#39ff14]/15"
+                                            : "border border-transparent hover:bg-white/3 hover:border-white/5"
                                             }`}
                                     >
                                         <MethodBadge method={ep.method} />
@@ -345,8 +360,8 @@ export function ApiPlayground() {
                                         <MethodBadge method={h.method} />
                                         <span
                                             className={`font-mono text-[10px] ml-auto tabular-nums ${h.statusCode >= 200 && h.statusCode < 300
-                                                    ? "text-[#39ff14]/60"
-                                                    : "text-[#f5a623]/60"
+                                                ? "text-[#39ff14]/60"
+                                                : "text-[#f5a623]/60"
                                                 }`}
                                         >
                                             {h.statusCode || "ERR"}
@@ -449,185 +464,189 @@ export function ApiPlayground() {
                                 </div>
                             )}
 
-                        {/* Send button */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={send}
-                            disabled={loading}
-                            className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 font-mono text-sm font-semibold transition-all ${loading
+                        {/* Action Buttons */}
+                        <div className="flex gap-3">
+                            {/* Send request (normal) */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={send}
+                                disabled={loading}
+                                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-5 py-2.5 font-mono text-sm font-semibold transition-all ${loading
                                     ? "border-white/5 bg-white/3 text-white/25 cursor-not-allowed"
                                     : "border-[#39ff14]/30 bg-[#39ff14]/8 text-[#39ff14] hover:bg-[#39ff14]/15 hover:border-[#39ff14]/50 hover:shadow-[0_0_16px_0_rgba(57,255,20,0.15)]"
-                                }`}
-                        >
-                            {loading ? (
-                                <>
-                                    <motion.div
-                                        className="h-3.5 w-3.5 rounded-full border-2 border-white/20 border-t-white/60"
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
-                                    />
-                                    Sending...
-                                </>
-                            ) : (
-                                <>
-                                    <Play size={13} className="fill-current" />
-                                    Send Request
-                                </>
-                            )}
-                        </motion.button>
-                    </div>
+                                    }`}
+                            >
+                                {loading ? "Sending..." : <><Play size={13} className="fill-current" /> Send Request</>}
+                            </motion.button>
 
-                    {/* ── Response panel ── */}
-                    <div className="flex-1 flex flex-col min-h-0">
-                        {/* Response meta bar */}
-                        <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3 flex-wrap gap-y-2">
-                            {/* Tabs */}
-                            <div className="flex gap-1">
-                                {(["response", "headers", "curl"] as const).map((tab) => (
-                                    <button
-                                        key={tab}
-                                        onClick={() => setActiveTab(tab)}
-                                        className={`font-mono text-[10px] px-3 py-1 rounded-lg capitalize transition-colors ${activeTab === tab
-                                                ? "bg-[#39ff14]/10 text-[#39ff14] border border-[#39ff14]/20"
-                                                : "text-white/30 hover:text-white/60"
-                                            }`}
-                                    >
-                                        {tab}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {response && (
-                                <div className="ml-auto flex items-center gap-3">
-                                    {/* Status */}
-                                    <span
-                                        className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] font-bold ${STATUS_STYLE(response.statusCode)}`}
-                                    >
-                                        {response.statusCode === 0 ? "ERR" : response.statusCode}
-                                    </span>
-                                    {/* Latency */}
-                                    <span className="flex items-center gap-1 font-mono text-[10px] text-white/30">
-                                        <Clock size={9} />
-                                        {response.latencyMs}ms
-                                    </span>
-                                    {/* Size */}
-                                    <span className="flex items-center gap-1 font-mono text-[10px] text-white/30">
-                                        <Code2 size={9} />
-                                        {formatBytes(response.size)}
-                                    </span>
-                                    {/* Copy */}
-                                    <CopyButton text={response.body} />
-                                </div>
-                            )}
+                            {/* Send request (SPAM) */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={spamAttack}
+                                disabled={loading}
+                                className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono text-sm font-semibold transition-all ${loading
+                                    ? "border-white/5 bg-white/3 text-white/25 cursor-not-allowed"
+                                    : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:shadow-[0_0_16px_0_rgba(239,68,68,0.2)]"
+                                    }`}
+                            >
+                                <Zap size={13} className={loading ? "animate-spin" : "fill-current"} />
+                                Spam 1000x
+                            </motion.button>
                         </div>
 
-                        {/* Response body */}
-                        <div className="flex-1 overflow-auto p-5 min-h-[240px]">
-                            <AnimatePresence mode="wait">
-                                {/* Empty state */}
-                                {!response && !loading && (
-                                    <motion.div
-                                        key="empty"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="h-full flex flex-col items-center justify-center gap-3 py-16"
-                                    >
-                                        <Terminal size={28} className="text-white/10" />
-                                        <p className="font-mono text-xs text-white/20 text-center">
-                                            Select an endpoint and hit{" "}
-                                            <span className="text-[#39ff14]/40">Send Request</span>
-                                            <br />
-                                            to see the live response from your Go API.
-                                        </p>
-                                    </motion.div>
+                        {/* ── Response panel ── */}
+                        <div className="flex-1 flex flex-col min-h-0">
+                            {/* Response meta bar */}
+                            <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3 flex-wrap gap-y-2">
+                                {/* Tabs */}
+                                <div className="flex gap-1">
+                                    {(["response", "headers", "curl"] as const).map((tab) => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setActiveTab(tab)}
+                                            className={`font-mono text-[10px] px-3 py-1 rounded-lg capitalize transition-colors ${activeTab === tab
+                                                ? "bg-[#39ff14]/10 text-[#39ff14] border border-[#39ff14]/20"
+                                                : "text-white/30 hover:text-white/60"
+                                                }`}
+                                        >
+                                            {tab}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {response && (
+                                    <div className="ml-auto flex items-center gap-3">
+                                        {/* Status */}
+                                        <span
+                                            className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] font-bold ${STATUS_STYLE(response.statusCode)}`}
+                                        >
+                                            {response.statusCode === 0 ? "ERR" : response.statusCode}
+                                        </span>
+                                        {/* Latency */}
+                                        <span className="flex items-center gap-1 font-mono text-[10px] text-white/30">
+                                            <Clock size={9} />
+                                            {response.latencyMs}ms
+                                        </span>
+                                        {/* Size */}
+                                        <span className="flex items-center gap-1 font-mono text-[10px] text-white/30">
+                                            <Code2 size={9} />
+                                            {formatBytes(response.size)}
+                                        </span>
+                                        {/* Copy */}
+                                        <CopyButton text={response.body} />
+                                    </div>
                                 )}
+                            </div>
 
-                                {/* Loading */}
-                                {loading && (
-                                    <motion.div
-                                        key="loading"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="h-full flex flex-col items-center justify-center gap-4 py-16"
-                                    >
-                                        <div className="relative flex h-10 w-10 items-center justify-center">
-                                            <motion.div
-                                                className="absolute inset-0 rounded-full border-2 border-[#39ff14]/20 border-t-[#39ff14]"
-                                                animate={{ rotate: 360 }}
-                                                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                                            />
-                                            <Zap size={14} className="text-[#39ff14]/60" />
-                                        </div>
-                                        <p className="font-mono text-[11px] text-white/25">
-                                            Awaiting response...
-                                        </p>
-                                    </motion.div>
-                                )}
+                            {/* Response body */}
+                            <div className="flex-1 overflow-auto p-5 min-h-[240px]">
+                                <AnimatePresence mode="wait">
+                                    {/* Empty state */}
+                                    {!response && !loading && (
+                                        <motion.div
+                                            key="empty"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="h-full flex flex-col items-center justify-center gap-3 py-16"
+                                        >
+                                            <Terminal size={28} className="text-white/10" />
+                                            <p className="font-mono text-xs text-white/20 text-center">
+                                                Select an endpoint and hit{" "}
+                                                <span className="text-[#39ff14]/40">Send Request</span>
+                                                <br />
+                                                to see the live response from your Go API.
+                                            </p>
+                                        </motion.div>
+                                    )}
 
-                                {/* Response */}
-                                {response && !loading && (
-                                    <motion.div
-                                        key="response"
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.25 }}
-                                    >
-                                        {/* Error notice */}
-                                        {!response.ok && (
-                                            <div className="flex items-center gap-2 mb-4 rounded-xl border border-[#f5a623]/15 bg-[#f5a623]/5 px-4 py-2.5">
-                                                <AlertCircle size={12} className="text-[#f5a623] shrink-0" />
-                                                <span className="font-mono text-[11px] text-[#f5a623]/80">
-                                                    Request failed — check your API server and CORS settings.
-                                                </span>
+                                    {/* Loading */}
+                                    {loading && (
+                                        <motion.div
+                                            key="loading"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="h-full flex flex-col items-center justify-center gap-4 py-16"
+                                        >
+                                            <div className="relative flex h-10 w-10 items-center justify-center">
+                                                <motion.div
+                                                    className="absolute inset-0 rounded-full border-2 border-[#39ff14]/20 border-t-[#39ff14]"
+                                                    animate={{ rotate: 360 }}
+                                                    transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                                                />
+                                                <Zap size={14} className="text-[#39ff14]/60" />
                                             </div>
-                                        )}
+                                            <p className="font-mono text-[11px] text-white/25">
+                                                Awaiting response...
+                                            </p>
+                                        </motion.div>
+                                    )}
 
-                                        {/* Tab: Response body */}
-                                        {activeTab === "response" && (
-                                            <pre className="font-mono text-[11px] leading-5 overflow-x-auto">
-                                                {highlightJson(response.body)}
-                                            </pre>
-                                        )}
-
-                                        {/* Tab: Headers */}
-                                        {activeTab === "headers" && (
-                                            <div className="space-y-2">
-                                                {Object.keys(response.headers).length === 0 ? (
-                                                    <p className="font-mono text-[11px] text-white/25">
-                                                        No headers captured.
-                                                    </p>
-                                                ) : (
-                                                    Object.entries(response.headers).map(([k, v]) => (
-                                                        <div key={k} className="flex gap-4 font-mono text-[11px] border-b border-white/3 pb-2">
-                                                            <span className="text-[#00acd7] shrink-0 w-40 truncate">{k}</span>
-                                                            <span className="text-white/50 break-all">{v}</span>
-                                                        </div>
-                                                    ))
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Tab: cURL */}
-                                        {activeTab === "curl" && (
-                                            <div className="space-y-3">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <span className="font-mono text-[10px] text-white/25 uppercase tracking-widest">
-                                                        Generated cURL
+                                    {/* Response */}
+                                    {response && !loading && (
+                                        <motion.div
+                                            key="response"
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.25 }}
+                                        >
+                                            {/* Error notice */}
+                                            {!response.ok && (
+                                                <div className="flex items-center gap-2 mb-4 rounded-xl border border-[#f5a623]/15 bg-[#f5a623]/5 px-4 py-2.5">
+                                                    <AlertCircle size={12} className="text-[#f5a623] shrink-0" />
+                                                    <span className="font-mono text-[11px] text-[#f5a623]/80">
+                                                        Request failed — check your API server and CORS settings.
                                                     </span>
-                                                    <CopyButton text={curlCmd} />
                                                 </div>
-                                                <pre className="font-mono text-[11px] text-[#39ff14]/70 leading-6 whitespace-pre-wrap">
-                                                    {curlCmd}
+                                            )}
+
+                                            {/* Tab: Response body */}
+                                            {activeTab === "response" && (
+                                                <pre className="font-mono text-[11px] leading-5 overflow-x-auto">
+                                                    {highlightJson(response.body)}
                                                 </pre>
-                                            </div>
-                                        )}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                                            )}
+
+                                            {/* Tab: Headers */}
+                                            {activeTab === "headers" && (
+                                                <div className="space-y-2">
+                                                    {Object.keys(response.headers).length === 0 ? (
+                                                        <p className="font-mono text-[11px] text-white/25">
+                                                            No headers captured.
+                                                        </p>
+                                                    ) : (
+                                                        Object.entries(response.headers).map(([k, v]) => (
+                                                            <div key={k} className="flex gap-4 font-mono text-[11px] border-b border-white/3 pb-2">
+                                                                <span className="text-[#00acd7] shrink-0 w-40 truncate">{k}</span>
+                                                                <span className="text-white/50 break-all">{v}</span>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Tab: cURL */}
+                                            {activeTab === "curl" && (
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <span className="font-mono text-[10px] text-white/25 uppercase tracking-widest">
+                                                            Generated cURL
+                                                        </span>
+                                                        <CopyButton text={curlCmd} />
+                                                    </div>
+                                                    <pre className="font-mono text-[11px] text-[#39ff14]/70 leading-6 whitespace-pre-wrap">
+                                                        {curlCmd}
+                                                    </pre>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </div>
                 </div>
