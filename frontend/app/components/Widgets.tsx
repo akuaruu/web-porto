@@ -152,9 +152,9 @@ export function SkillsWidget() {
               <span className="text-white/50">{skill.label}</span>
               <span className="text-[#39ff14]/60">{skill.pct}%</span>
             </div>
-            <div className="h-[3px] w-full rounded-full bg-white/5 overflow-hidden">
+            <div className="h-0.75  w-full rounded-full bg-white/5 overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-[#39ff14]/60 to-[#39ff14]"
+                className="h-full rounded-full bg-linear-to-r from-[#39ff14]/60 to-[#39ff14]"
                 initial={{ width: 0 }}
                 animate={inView ? { width: `${skill.pct}%` } : {}}
                 transition={{
@@ -205,7 +205,7 @@ export function AvailabilityWidget() {
           ].map(([label, val]) => (
             <div key={label} className="flex justify-between font-mono text-[10px]">
               <span className="text-white/30">{label}</span>
-              <span classNamecondition="text-white/70">{val}</span>
+              <span className="text-white/70">{val}</span>
             </div>
           ))}
           <div className="flex justify-between font-mono text-[10px]">
