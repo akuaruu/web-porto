@@ -3,7 +3,6 @@
 A full-stack developer portfolio designed not just to display projects, but to actively demonstrate backend engineering capabilities. It features an interactive REST API playground, real-time server telemetry, and custom-built middleware, all fully containerized.
 
 ![Hero Screenshot](./docs/screenshot-hero.png)
-> **Note:** Please replace the path above with a screenshot of your actual website's hero section or main dashboard.
 
 ## 🚀 Key Features
 
