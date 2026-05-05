@@ -35,6 +35,8 @@ func main() {
 	projectHandler := handler.NewProjectHandler(projectUsecase)
 
 	// 2. Setup Router
+	healthHandler := handler.NewHealthHandler()
+
 	mux := http.NewServeMux()
 
 	// Auth endpoints
@@ -56,6 +58,11 @@ func main() {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
+	})
+
+	// Health enpoint
+	mux.HandleFunc("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
+		healthHandler.Check(w, r)
 	})
 
 	// Protection layer
