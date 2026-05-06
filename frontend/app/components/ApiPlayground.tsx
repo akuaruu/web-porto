@@ -89,7 +89,7 @@ const STATUS_STYLE = (code: number) => {
     return "text-[#ff4d4d] bg-[#ff4d4d]/10 border-[#ff4d4d]/25";
 };
 
-const BASE = "http://localhost:8080";
+const BASE = process.env.NEXT_PUBLIC_API_URL || "";
 
 function buildUrl(path: string, params?: Record<string, string>): string {
     let resolved = path;
@@ -293,7 +293,7 @@ export function ApiPlayground() {
                         API Playground
                     </h2>
                     <p className="font-mono text-[10px] text-white/30">
-                        Live requests to the Go backend · localhost:8080
+                        Live requests to the Go backend
                     </p>
                 </div>
                 <div className="ml-auto flex items-center gap-2">

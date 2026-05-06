@@ -1,6 +1,7 @@
 # Portfolio & Live API Playground
 
-A full-stack developer portfolio designed not just to display projects, but to actively demonstrate backend engineering capabilities. It features an interactive REST API playground, real-time server telemetry, and custom-built middleware, all fully containerized.
+This is my portofolio website : [https://aruu.app/](https://aruu.app/)
+It features an interactive REST API playground, real-time server telemetry, and custom-built middleware, all fully containerized.
 
 ![Hero Screenshot](./docs/screenshot-hero.png)
 
@@ -45,7 +46,7 @@ Ensure you have [Docker](https://www.docker.com/) and Docker Compose installed o
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/yourusername/web_porto.git](https://github.com/yourusername/web_porto.git)
+   git clone [https://github.com/akuaruu/web_porto.git](https://github.com//web_porto.git)
    cd web_porto
 
 2. **Environment Setup:**
@@ -79,9 +80,12 @@ Ensure you have [Docker](https://www.docker.com/) and Docker Compose installed o
 │   │   ├── middleware/     # Custom middlewares (CORS, Rate Limiter, Logger)
 │   │   ├── repository/     # Database operations
 │   │   └── usecase/        # Business logic
-│   └── pkg/                # Publicly shared packages (e.g., database connection)
+│   ├── pkg/                # Publicly shared packages (e.g., database connection)
+│   └── Dockerfile          # Backend container instructions
 ├── frontend/
 │   ├── app/                # Next.js App Router components & pages
 │   ├── components/         # Reusable UI components (Widgets, ApiPlayground)
-│   └── lib/                # API execution logic
+│   ├── lib/                # API execution logic
+│   └── Dockerfile          # Frontend container instructions
+├── .env                    # Main environment variables (not tracked in git)
 └── docker-compose.yml      # Container orchestration
