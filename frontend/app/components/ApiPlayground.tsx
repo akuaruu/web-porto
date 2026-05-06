@@ -307,7 +307,7 @@ export function ApiPlayground() {
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row min-h-[600px]">
+            <div className="flex flex-col lg:flex-row min-h-150">
                 {/* ── LEFT: Endpoint Sidebar ── */}
                 <div className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-white/5 p-4 space-y-4 overflow-y-auto">
                     {Object.entries(grouped).map(([group, eps]) => (

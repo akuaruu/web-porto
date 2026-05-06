@@ -3,8 +3,8 @@ import type { ApiResponse, Project, PlaygroundResponse, HttpMethod } from "@/typ
 const isServer = typeof window === "undefined";
 
 const BASE_URL = isServer
-    ? (process.env.API_INTERNAL_URL ?? "http://backend:8080") // Alamat internal Docker
-    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"); // Alamat dari laptop/browser
+    ? (process.env.API_INTERNAL_URL ?? "http://porto_backend:8080") // Alamat internal Docker
+    : (process.env.NEXT_PUBLIC_API_URL ?? "https://aruu.app"); // Alamat dari laptop/browser
 
 // ─── Generic fetch wrapper
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {

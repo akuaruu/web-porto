@@ -158,7 +158,7 @@ export default function Dashboard() {
           className="flex items-center justify-between py-4 border-t border-white/5"
         >
           <span className="font-mono text-[10px] text-white/15">
-            aruu.dev · Go + Next.js + PostgreSQL
+            aruu.app · Go + Next.js + PostgreSQL
           </span>
           <span className="font-mono text-[10px] text-[#39ff14]/30">
             © {new Date().getFullYear()}
