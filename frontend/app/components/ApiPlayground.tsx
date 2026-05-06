@@ -89,7 +89,7 @@ const STATUS_STYLE = (code: number) => {
     return "text-[#ff4d4d] bg-[#ff4d4d]/10 border-[#ff4d4d]/25";
 };
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "";
+const BASE = "";
 
 function buildUrl(path: string, params?: Record<string, string>): string {
     let resolved = path;
@@ -541,7 +541,7 @@ export function ApiPlayground() {
                             </div>
 
                             {/* Response body */}
-                            <div className="flex-1 overflow-auto p-5 min-h-[240px]">
+                            <div className="flex-1 overflow-auto p-5 min-h-60">
                                 <AnimatePresence mode="wait">
                                     {/* Empty state */}
                                     {!response && !loading && (
