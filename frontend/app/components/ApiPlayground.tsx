@@ -27,11 +27,19 @@ import type {
 
 const ENDPOINTS: EndpointDefinition[] = [
     {
-        id: "list-projects",
-        label: "List Projects",
+        id: "health",
+        label: "Health Check",
         method: "GET",
-        path: "/api/v1/projects",
-        description: "Returns all projects stored in PostgreSQL.",
+        path: "/api/v1/health",
+        description: "Verify the API server, database connection, and deploy path.",
+        group: "System",
+    },
+    {
+        id: "list-projects",
+        label: "Featured Projects",
+        method: "GET",
+        path: "/api/featured-projects",
+        description: "Returns the same GitHub-backed projects rendered in the featured section.",
         group: "Projects",
     },
     {
@@ -48,7 +56,7 @@ const ENDPOINTS: EndpointDefinition[] = [
         label: "Create Project",
         method: "POST",
         path: "/api/v1/projects",
-        description: "Create a new project entry.",
+        description: "Protected admin write path. It should return 401 without a JWT.",
         group: "Projects",
         sampleBody: JSON.stringify(
             {
@@ -62,31 +70,39 @@ const ENDPOINTS: EndpointDefinition[] = [
         ),
     },
     {
-        id: "health",
-        label: "Health Check",
-        method: "GET",
-        path: "/api/v1/health",
-        description: "Verify the API server is alive and responsive.",
-        group: "System",
+        id: "auth-login",
+        label: "Auth Login",
+        method: "POST",
+        path: "/api/v1/auth/login",
+        description: "JWT issue endpoint for protected admin flows. Use safe demo input only.",
+        group: "Auth",
+        sampleBody: JSON.stringify(
+            {
+                username: "demo",
+                password: "demo-password",
+            },
+            null,
+            2
+        ),
     },
 ];
 
 // ─── Helpers
 
 const METHOD_STYLES: Record<HttpMethod, string> = {
-    GET: "text-[#39ff14]   bg-[#39ff14]/10   border-[#39ff14]/25",
-    POST: "text-[#00acd7]   bg-[#00acd7]/10   border-[#00acd7]/25",
-    PUT: "text-[#f5a623]   bg-[#f5a623]/10   border-[#f5a623]/25",
-    PATCH: "text-[#a78bfa]   bg-[#a78bfa]/10   border-[#a78bfa]/25",
-    DELETE: "text-[#ff4d4d]   bg-[#ff4d4d]/10   border-[#ff4d4d]/25",
+    GET: "text-emerald-200 bg-emerald-300/10 border-emerald-300/20",
+    POST: "text-cyan-200 bg-cyan-300/10 border-cyan-300/20",
+    PUT: "text-amber-200 bg-amber-300/10 border-amber-300/20",
+    PATCH: "text-violet-200 bg-violet-300/10 border-violet-300/20",
+    DELETE: "text-red-200 bg-red-300/10 border-red-300/20",
 };
 
 const STATUS_STYLE = (code: number) => {
     if (code === 0) return "text-white/40 bg-white/5 border-white/10";
-    if (code >= 200 && code < 300) return "text-[#39ff14] bg-[#39ff14]/10 border-[#39ff14]/25";
-    if (code >= 300 && code < 400) return "text-[#00acd7] bg-[#00acd7]/10 border-[#00acd7]/25";
-    if (code >= 400 && code < 500) return "text-[#f5a623] bg-[#f5a623]/10 border-[#f5a623]/25";
-    return "text-[#ff4d4d] bg-[#ff4d4d]/10 border-[#ff4d4d]/25";
+    if (code >= 200 && code < 300) return "text-emerald-200 bg-emerald-300/10 border-emerald-300/20";
+    if (code >= 300 && code < 400) return "text-cyan-200 bg-cyan-300/10 border-cyan-300/20";
+    if (code >= 400 && code < 500) return "text-amber-200 bg-amber-300/10 border-amber-300/20";
+    return "text-red-200 bg-red-300/10 border-red-300/20";
 };
 
 const BASE = "";
@@ -115,6 +131,50 @@ function formatBytes(bytes: number): string {
     return `${(bytes / 1024).toFixed(1)} KB`;
 }
 
+function getResponseNotice(response: PlaygroundResponse) {
+    if (response.statusCode === 0) {
+        return {
+            tone: "error",
+            text: "Network request failed. Check the API URL, local proxy, or server availability.",
+        };
+    }
+    if (response.statusCode === 401) {
+        return {
+            tone: "warning",
+            text: "Protected endpoint. This route is working, but it requires a valid JWT.",
+        };
+    }
+    if (response.statusCode === 404) {
+        return {
+            tone: "warning",
+            text: "Endpoint or resource not found. Check the path parameter or route.",
+        };
+    }
+    if (response.statusCode === 429) {
+        return {
+            tone: "warning",
+            text: "Rate limiter blocked the request. Wait for the retry window before sending again.",
+        };
+    }
+    if (response.statusCode >= 500) {
+        return {
+            tone: "error",
+            text: "Server returned an internal error. Inspect backend logs for the failing handler.",
+        };
+    }
+    if (response.ok) {
+        return {
+            tone: "success",
+            text: "Request completed successfully. Response data is shown below.",
+        };
+    }
+
+    return {
+        tone: "warning",
+        text: "Request returned a non-success response. Inspect the body and headers below.",
+    };
+}
+
 function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
     return arr.reduce((acc, item) => {
         const k = key(item);
@@ -133,17 +193,17 @@ function highlightJson(json: string): React.ReactNode {
             .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
                 if (/^"/.test(match)) {
                     if (/:$/.test(match)) {
-                        return `<span class="text-[#00acd7]">${match}</span>`;
+                        return `<span class="text-cyan-200">${match}</span>`;
                     }
-                    return `<span class="text-[#f5a623]">${match}</span>`;
+                    return `<span class="text-amber-200">${match}</span>`;
                 }
                 if (/true|false/.test(match)) {
-                    return `<span class="text-[#39ff14]">${match}</span>`;
+                    return `<span class="text-emerald-200">${match}</span>`;
                 }
                 if (/null/.test(match)) {
                     return `<span class="text-white/30">${match}</span>`;
                 }
-                return `<span class="text-[#a78bfa]">${match}</span>`;
+                return `<span class="text-violet-200">${match}</span>`;
             });
         return (
             <div key={i} className="flex">
@@ -184,7 +244,7 @@ function CopyButton({ text }: { text: string }) {
             onClick={copy}
             className="flex items-center gap-1 rounded-lg border border-white/5 bg-white/5 px-2 py-1 font-mono text-[10px] text-white/40 hover:text-white/70 hover:border-white/10 transition-colors"
         >
-            {copied ? <Check size={10} className="text-[#39ff14]" /> : <Copy size={10} />}
+            {copied ? <Check size={10} className="text-emerald-200" /> : <Copy size={10} />}
             {copied ? "Copied!" : "Copy"}
         </motion.button>
     );
@@ -192,7 +252,7 @@ function CopyButton({ text }: { text: string }) {
 
 // ─── Main Component 
 
-export function ApiPlayground() {
+export function ApiPlayground({ compact = false }: { compact?: boolean }) {
     const [selected, setSelected] = useState<EndpointDefinition>(ENDPOINTS[0]);
     const [customPath, setCustomPath] = useState(ENDPOINTS[0].path);
     const [body, setBody] = useState(ENDPOINTS[0].sampleBody ?? "");
@@ -205,6 +265,7 @@ export function ApiPlayground() {
 
     const resolvedUrl = buildUrl(customPath, Object.keys(params).length ? params : undefined);
     const curlCmd = buildCurl(selected.method, resolvedUrl, body || undefined);
+    const responsePanelHeight = compact ? "min-h-72 max-h-[360px]" : "min-h-80 max-h-[460px]";
 
     const selectEndpoint = useCallback((ep: EndpointDefinition) => {
         setSelected(ep);
@@ -280,35 +341,35 @@ export function ApiPlayground() {
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-2xl border border-white/5 bg-[#111111] overflow-hidden"
+            className="overflow-hidden rounded-2xl border border-zinc-800 bg-[#0b0d11]"
         >
             {/* ── Section Header ── */}
-            <div className="flex items-center gap-3 border-b border-white/5 px-5 py-4">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#39ff14]/10 border border-[#39ff14]/20">
-                    <Zap size={13} className="text-[#39ff14]" />
+            <div className="flex items-center gap-3 border-b border-zinc-800 px-5 py-4">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-emerald-300/20 bg-emerald-300/10">
+                    <Zap size={13} className="text-emerald-200" />
                 </div>
                 <div>
                     <h2 className="font-mono text-sm font-semibold text-white">
                         API Playground
                     </h2>
                     <p className="font-mono text-[10px] text-white/30">
-                        Live requests to the Go backend
+                        Live requests against portfolio endpoints
                     </p>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                     <motion.span
-                        className="font-mono text-[10px] text-[#39ff14]/50"
+                        className="font-mono text-[10px] text-emerald-200/55"
                         animate={{ opacity: [0.5, 1, 0.5] }}
                         transition={{ duration: 2.5, repeat: Infinity }}
                     >
-                        ● CONNECTED
+                        CONNECTED
                     </motion.span>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row min-h-150">
+            <div className={`flex flex-col lg:flex-row ${compact ? "min-h-[620px]" : "min-h-150"}`}>
                 {/* ── LEFT: Endpoint Sidebar ── */}
-                <div className="w-full lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r border-white/5 p-4 space-y-4 overflow-y-auto">
+                <div className="w-full lg:w-64 shrink-0 border-b border-zinc-800 p-4 space-y-4 overflow-y-auto lg:border-b-0 lg:border-r">
                     {Object.entries(grouped).map(([group, eps]) => (
                         <div key={group}>
                             <div className="flex items-center gap-1.5 mb-2">
@@ -324,8 +385,8 @@ export function ApiPlayground() {
                                         whileHover={{ x: 2 }}
                                         onClick={() => selectEndpoint(ep)}
                                         className={`w-full flex items-center gap-2 rounded-lg px-3 py-2 text-left transition-colors ${selected.id === ep.id
-                                            ? "bg-[#39ff14]/8 border border-[#39ff14]/15"
-                                            : "border border-transparent hover:bg-white/3 hover:border-white/5"
+                                            ? "border border-emerald-300/15 bg-emerald-300/10"
+                                            : "border border-transparent hover:border-zinc-800 hover:bg-zinc-900/70"
                                             }`}
                                     >
                                         <MethodBadge method={ep.method} />
@@ -333,7 +394,7 @@ export function ApiPlayground() {
                                             {ep.label}
                                         </span>
                                         {selected.id === ep.id && (
-                                            <ChevronRight size={10} className="ml-auto shrink-0 text-[#39ff14]/60" />
+                                            <ChevronRight size={10} className="ml-auto shrink-0 text-emerald-200/70" />
                                         )}
                                     </motion.button>
                                 ))}
@@ -359,8 +420,8 @@ export function ApiPlayground() {
                                         <MethodBadge method={h.method} />
                                         <span
                                             className={`font-mono text-[10px] ml-auto tabular-nums ${h.statusCode >= 200 && h.statusCode < 300
-                                                ? "text-[#39ff14]/60"
-                                                : "text-[#f5a623]/60"
+                                                ? "text-emerald-200/70"
+                                                : "text-amber-200/70"
                                                 }`}
                                         >
                                             {h.statusCode || "ERR"}
@@ -376,14 +437,14 @@ export function ApiPlayground() {
                 <div className="flex-1 flex flex-col min-w-0">
 
                     {/* ── Request builder ── */}
-                    <div className="border-b border-white/5 p-5 space-y-4">
+                    <div className="border-b border-zinc-800 p-5 space-y-4">
                         {/* Description */}
                         <p className="font-mono text-[11px] text-white/35 leading-relaxed">
                             {selected.description}
                         </p>
 
                         {/* URL bar */}
-                        <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-[#0d0d0d] px-3 py-2.5 focus-within:border-[#39ff14]/25 transition-colors">
+                        <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-[#080a0d] px-3 py-2.5 transition-colors focus-within:border-emerald-300/25">
                             <MethodBadge method={selected.method} />
                             <span className="font-mono text-[11px] text-white/25 shrink-0">
                                 {BASE}
@@ -404,7 +465,7 @@ export function ApiPlayground() {
                                 </span>
                                 {Object.entries(params).map(([k, v]) => (
                                     <div key={k} className="flex items-center gap-2">
-                                        <span className="font-mono text-[10px] text-[#00acd7] w-20 shrink-0">
+                                        <span className="font-mono text-[10px] text-cyan-200 w-20 shrink-0">
                                             :{k}
                                         </span>
                                         <input
@@ -412,7 +473,7 @@ export function ApiPlayground() {
                                             onChange={(e) =>
                                                 setParams((p) => ({ ...p, [k]: e.target.value }))
                                             }
-                                            className="flex-1 rounded-lg border border-white/8 bg-[#0d0d0d] px-3 py-1.5 font-mono text-[11px] text-white/70 outline-none focus:border-[#39ff14]/25 transition-colors"
+                                            className="flex-1 rounded-lg border border-zinc-800 bg-[#080a0d] px-3 py-1.5 font-mono text-[11px] text-white/70 outline-none transition-colors focus:border-emerald-300/25"
                                         />
                                     </div>
                                 ))}
@@ -440,7 +501,7 @@ export function ApiPlayground() {
                                             </motion.button>
                                         </div>
                                     </div>
-                                    <div className="relative rounded-xl border border-white/8 bg-[#0d0d0d] focus-within:border-[#39ff14]/20 transition-colors overflow-hidden">
+                                    <div className="relative overflow-hidden rounded-xl border border-zinc-800 bg-[#080a0d] transition-colors focus-within:border-emerald-300/20">
                                         <div className="absolute left-0 top-0 bottom-0 w-8 border-r border-white/5 flex flex-col pt-3">
                                             {body.split("\n").map((_, i) => (
                                                 <span
@@ -472,8 +533,8 @@ export function ApiPlayground() {
                                 onClick={send}
                                 disabled={loading}
                                 className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-5 py-2.5 font-mono text-sm font-semibold transition-all ${loading
-                                    ? "border-white/5 bg-white/3 text-white/25 cursor-not-allowed"
-                                    : "border-[#39ff14]/30 bg-[#39ff14]/8 text-[#39ff14] hover:bg-[#39ff14]/15 hover:border-[#39ff14]/50 hover:shadow-[0_0_16px_0_rgba(57,255,20,0.15)]"
+                                    ? "border-zinc-800 bg-zinc-900/60 text-white/25 cursor-not-allowed"
+                                    : "border-emerald-300/30 bg-emerald-300/10 text-emerald-200 hover:border-emerald-300/45 hover:bg-emerald-300/15"
                                     }`}
                             >
                                 {loading ? "Sending..." : <><Play size={13} className="fill-current" /> Send Request</>}
@@ -486,8 +547,8 @@ export function ApiPlayground() {
                                 onClick={spamAttack}
                                 disabled={loading}
                                 className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 font-mono text-sm font-semibold transition-all ${loading
-                                    ? "border-white/5 bg-white/3 text-white/25 cursor-not-allowed"
-                                    : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:shadow-[0_0_16px_0_rgba(239,68,68,0.2)]"
+                                    ? "border-zinc-800 bg-zinc-900/60 text-white/25 cursor-not-allowed"
+                                    : "border-amber-300/25 bg-amber-300/10 text-amber-200 hover:border-amber-300/40 hover:bg-amber-300/15"
                                     }`}
                             >
                                 <Zap size={13} className={loading ? "animate-spin" : "fill-current"} />
@@ -498,7 +559,7 @@ export function ApiPlayground() {
                         {/* ── Response panel ── */}
                         <div className="flex-1 flex flex-col min-h-0">
                             {/* Response meta bar */}
-                            <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3 flex-wrap gap-y-2">
+                            <div className="flex items-center gap-3 border-b border-zinc-800 px-5 py-3 flex-wrap gap-y-2">
                                 {/* Tabs */}
                                 <div className="flex gap-1">
                                     {(["response", "headers", "curl"] as const).map((tab) => (
@@ -506,7 +567,7 @@ export function ApiPlayground() {
                                             key={tab}
                                             onClick={() => setActiveTab(tab)}
                                             className={`font-mono text-[10px] px-3 py-1 rounded-lg capitalize transition-colors ${activeTab === tab
-                                                ? "bg-[#39ff14]/10 text-[#39ff14] border border-[#39ff14]/20"
+                                                ? "bg-emerald-300/10 text-emerald-200 border border-emerald-300/20"
                                                 : "text-white/30 hover:text-white/60"
                                                 }`}
                                         >
@@ -540,7 +601,7 @@ export function ApiPlayground() {
                             </div>
 
                             {/* Response body */}
-                            <div className="flex-1 overflow-auto p-5 min-h-60">
+                            <div className={`flex-1 overflow-auto overscroll-contain p-5 ${responsePanelHeight}`}>
                                 <AnimatePresence mode="wait">
                                     {/* Empty state */}
                                     {!response && !loading && (
@@ -554,7 +615,7 @@ export function ApiPlayground() {
                                             <Terminal size={28} className="text-white/10" />
                                             <p className="font-mono text-xs text-white/20 text-center">
                                                 Select an endpoint and hit{" "}
-                                                <span className="text-[#39ff14]/40">Send Request</span>
+                                                <span className="text-emerald-200/60">Send Request</span>
                                                 <br />
                                                 to see the live response from your Go API.
                                             </p>
@@ -572,11 +633,11 @@ export function ApiPlayground() {
                                         >
                                             <div className="relative flex h-10 w-10 items-center justify-center">
                                                 <motion.div
-                                                    className="absolute inset-0 rounded-full border-2 border-[#39ff14]/20 border-t-[#39ff14]"
+                                                    className="absolute inset-0 rounded-full border-2 border-emerald-300/20 border-t-emerald-300"
                                                     animate={{ rotate: 360 }}
                                                     transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                                                 />
-                                                <Zap size={14} className="text-[#39ff14]/60" />
+                                                <Zap size={14} className="text-emerald-200/70" />
                                             </div>
                                             <p className="font-mono text-[11px] text-white/25">
                                                 Awaiting response...
@@ -593,19 +654,28 @@ export function ApiPlayground() {
                                             exit={{ opacity: 0 }}
                                             transition={{ duration: 0.25 }}
                                         >
-                                            {/* Error notice */}
-                                            {!response.ok && (
-                                                <div className="flex items-center gap-2 mb-4 rounded-xl border border-[#f5a623]/15 bg-[#f5a623]/5 px-4 py-2.5">
-                                                    <AlertCircle size={12} className="text-[#f5a623] shrink-0" />
-                                                    <span className="font-mono text-[11px] text-[#f5a623]/80">
-                                                        Request failed - check your API server and CORS settings.
-                                                    </span>
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                const notice = getResponseNotice(response);
+                                                const noticeClass =
+                                                    notice.tone === "success"
+                                                        ? "border-emerald-300/15 bg-emerald-300/10 text-emerald-100/80"
+                                                        : notice.tone === "error"
+                                                            ? "border-red-300/15 bg-red-300/10 text-red-100/80"
+                                                            : "border-amber-300/15 bg-amber-300/10 text-amber-100/80";
+
+                                                return (
+                                                    <div className={`mb-4 flex items-center gap-2 rounded-xl border px-4 py-2.5 ${noticeClass}`}>
+                                                        <AlertCircle size={12} className="shrink-0" />
+                                                        <span className="font-mono text-[11px]">
+                                                            {notice.text}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             {/* Tab: Response body */}
                                             {activeTab === "response" && (
-                                                <pre className="font-mono text-[11px] leading-5 overflow-x-auto">
+                                                <pre className="font-mono text-[11px] leading-5 min-w-max overflow-x-auto pr-4">
                                                     {highlightJson(response.body)}
                                                 </pre>
                                             )}
@@ -620,7 +690,7 @@ export function ApiPlayground() {
                                                     ) : (
                                                         Object.entries(response.headers).map(([k, v]) => (
                                                             <div key={k} className="flex gap-4 font-mono text-[11px] border-b border-white/3 pb-2">
-                                                                <span className="text-[#00acd7] shrink-0 w-40 truncate">{k}</span>
+                                                                <span className="text-cyan-200 shrink-0 w-40 truncate">{k}</span>
                                                                 <span className="text-white/50 break-all">{v}</span>
                                                             </div>
                                                         ))
@@ -637,7 +707,7 @@ export function ApiPlayground() {
                                                         </span>
                                                         <CopyButton text={curlCmd} />
                                                     </div>
-                                                    <pre className="font-mono text-[11px] text-[#39ff14]/70 leading-6 whitespace-pre-wrap">
+                                                    <pre className="font-mono text-[11px] text-emerald-100/75 leading-6 whitespace-pre-wrap">
                                                         {curlCmd}
                                                     </pre>
                                                 </div>

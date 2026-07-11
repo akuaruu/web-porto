@@ -4,22 +4,43 @@ export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "er
 
 export interface EngineInfoMessage {
   type: "engine_info";
-  eval: string;
-  depth: string;
+  request_id?: string;
+  eval:
+    | string
+    | {
+        type: "cp" | "mate" | "unknown";
+        value: number | null;
+        display: string;
+      };
+  depth: number | string;
 }
 
 export interface EngineMoveMessage {
   type: "engine_move";
+  request_id?: string;
   best_move: string;
 }
 
-// 1. Tambahkan tipe untuk pesan Pong
 export interface PongMessage {
   type: "pong";
+  request_id?: string;
+  server_time?: string;
 }
 
-// 2. Masukkan PongMessage ke dalam ServerMessage
-export type ServerMessage = EngineInfoMessage | EngineMoveMessage | PongMessage;
+export interface ErrorMessage {
+  type: "error";
+  request_id?: string;
+  message: string;
+  error?: {
+    code: string;
+  };
+}
+
+export type ServerMessage =
+  | EngineInfoMessage
+  | EngineMoveMessage
+  | PongMessage
+  | ErrorMessage;
 
 export interface TelemetryLog {
   id: number;
@@ -132,24 +153,30 @@ export function useChessWebSocket({
       if (!isMountedRef.current) return;
 
       try {
-        // 3. Parsing data dengan tipe yang sudah diperbarui
         const data = JSON.parse(event.data) as ServerMessage;
 
-        // Sekarang TypeScript tahu "pong" itu sah!
         if (data.type === "pong" && pingTimestampRef.current) {
           setLatency(Date.now() - pingTimestampRef.current);
           return;
         }
 
         if (data.type === "engine_info") {
+          const depth = String(data.depth);
+          const evalDisplay =
+            typeof data.eval === "string" ? data.eval : data.eval.display;
           addLog(
             "info",
-            `depth=${data.depth.padStart(2, "0")}  eval=${data.eval.padStart(6, " ")}`
+            `depth=${depth.padStart(2, "0")}  eval=${evalDisplay.padStart(6, " ")}`
           );
           onEngineInfo(data);
         } else if (data.type === "engine_move") {
           addLog("move", `best_move → ${data.best_move}`);
           onEngineMove(data.best_move);
+        } else if (data.type === "error") {
+          addLog(
+            "system",
+            `[ENGINE ERROR] ${data.error?.code ?? "UNKNOWN"} ${data.message}`
+          );
         }
       } catch {
         addLog("system", `[PARSE ERROR] ${event.data}`);

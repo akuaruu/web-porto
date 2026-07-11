@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { EngineInfoMessage, useChessWebSocket } from "@/hooks/useChessWebSocket";
 import TelemetryPanel from "@/app/components/TelemetryPanel";
 import ConnectionStatusBadge from "@/app/components/ConnectionStatusBadge";
@@ -31,8 +32,8 @@ export default function ChessEnginePage() {
   }, []);
 
   const handleEngineInfo = useCallback((info: EngineInfoMessage) => {
-    setEvalScore(info.eval);
-    setDepth(info.depth);
+    setEvalScore(typeof info.eval === "string" ? info.eval : info.eval.display);
+    setDepth(String(info.depth));
     setIsEngineThinking(true);
   }, []);
 
@@ -55,7 +56,7 @@ export default function ChessEnginePage() {
   return (
     // overflow-x-hidden: mencegah konten yang overflow ke kanan menyebabkan page shift
     <main
-      className="min-h-screen bg-[#07070a] text-white overflow-x-hidden"
+      className="min-h-[100dvh] bg-[#07070a] text-white overflow-x-hidden"
       style={{ fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}
     >
       {/* Background grid */}
@@ -72,8 +73,14 @@ export default function ChessEnginePage() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="flex items-start justify-between mb-8">
+        <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
+            <Link
+              href="/#chess"
+              className="mb-4 inline-flex items-center gap-2 rounded-lg border border-zinc-800 px-3 py-2 text-[11px] text-zinc-400 transition hover:border-emerald-300/30 hover:text-emerald-100"
+            >
+              Back to portfolio
+            </Link>
             <div className="text-[10px] text-zinc-600 tracking-[0.3em] mb-1">
               PORTFOLIO / CHESS ENGINE
             </div>

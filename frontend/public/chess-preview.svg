@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="960" viewBox="0 0 960 960" role="img" aria-labelledby="title desc">
+  <title id="title">Chess engine board preview</title>
+  <desc id="desc">A static chess board preview with black pieces on the top ranks and white pieces on the bottom ranks.</desc>
+  <defs>
+    <style>
+      .light { fill: #94b49f; }
+      .dark { fill: #2d4a35; }
+      .label { fill: #213b2a; font: 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; opacity: 0.88; }
+      .white-piece { fill: #f8f8f8; stroke: #050505; stroke-width: 6px; paint-order: stroke; font: 94px "DejaVu Sans", "Noto Sans Symbols 2", "Segoe UI Symbol", serif; }
+      .black-piece { fill: #020403; stroke: #020403; stroke-width: 3px; paint-order: stroke; font: 94px "DejaVu Sans", "Noto Sans Symbols 2", "Segoe UI Symbol", serif; }
+    </style>
+    <clipPath id="board-radius">
+      <rect x="0" y="0" width="960" height="960" rx="14" ry="14" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#board-radius)">
+    <rect width="960" height="960" fill="#94b49f" />
+    <g>
+      <rect class="light" x="0" y="0" width="120" height="120" />
+      <rect class="dark" x="120" y="0" width="120" height="120" />
+      <rect class="light" x="240" y="0" width="120" height="120" />
+      <rect class="dark" x="360" y="0" width="120" height="120" />
+      <rect class="light" x="480" y="0" width="120" height="120" />
+      <rect class="dark" x="600" y="0" width="120" height="120" />
+      <rect class="light" x="720" y="0" width="120" height="120" />
+      <rect class="dark" x="840" y="0" width="120" height="120" />
+      <rect class="dark" x="0" y="120" width="120" height="120" />
+      <rect class="light" x="120" y="120" width="120" height="120" />
+      <rect class="dark" x="240" y="120" width="120" height="120" />
+      <rect class="light" x="360" y="120" width="120" height="120" />
+      <rect class="dark" x="480" y="120" width="120" height="120" />
+      <rect class="light" x="600" y="120" width="120" height="120" />
+      <rect class="dark" x="720" y="120" width="120" height="120" />
+      <rect class="light" x="840" y="120" width="120" height="120" />
+      <rect class="light" x="0" y="240" width="120" height="120" />
+      <rect class="dark" x="120" y="240" width="120" height="120" />
+      <rect class="light" x="240" y="240" width="120" height="120" />
+      <rect class="dark" x="360" y="240" width="120" height="120" />
+      <rect class="light" x="480" y="240" width="120" height="120" />
+      <rect class="dark" x="600" y="240" width="120" height="120" />
+      <rect class="light" x="720" y="240" width="120" height="120" />
+      <rect class="dark" x="840" y="240" width="120" height="120" />
+      <rect class="dark" x="0" y="360" width="120" height="120" />
+      <rect class="light" x="120" y="360" width="120" height="120" />
+      <rect class="dark" x="240" y="360" width="120" height="120" />
+      <rect class="light" x="360" y="360" width="120" height="120" />
+      <rect class="dark" x="480" y="360" width="120" height="120" />
+      <rect class="light" x="600" y="360" width="120" height="120" />
+      <rect class="dark" x="720" y="360" width="120" height="120" />
+      <rect class="light" x="840" y="360" width="120" height="120" />
+      <rect class="light" x="0" y="480" width="120" height="120" />
+      <rect class="dark" x="120" y="480" width="120" height="120" />
+      <rect class="light" x="240" y="480" width="120" height="120" />
+      <rect class="dark" x="360" y="480" width="120" height="120" />
+      <rect class="light" x="480" y="480" width="120" height="120" />
+      <rect class="dark" x="600" y="480" width="120" height="120" />
+      <rect class="light" x="720" y="480" width="120" height="120" />
+      <rect class="dark" x="840" y="480" width="120" height="120" />
+      <rect class="dark" x="0" y="600" width="120" height="120" />
+      <rect class="light" x="120" y="600" width="120" height="120" />
+      <rect class="dark" x="240" y="600" width="120" height="120" />
+      <rect class="light" x="360" y="600" width="120" height="120" />
+      <rect class="dark" x="480" y="600" width="120" height="120" />
+      <rect class="light" x="600" y="600" width="120" height="120" />
+      <rect class="dark" x="720" y="600" width="120" height="120" />
+      <rect class="light" x="840" y="600" width="120" height="120" />
+      <rect class="light" x="0" y="720" width="120" height="120" />
+      <rect class="dark" x="120" y="720" width="120" height="120" />
+      <rect class="light" x="240" y="720" width="120" height="120" />
+      <rect class="dark" x="360" y="720" width="120" height="120" />
+      <rect class="light" x="480" y="720" width="120" height="120" />
+      <rect class="dark" x="600" y="720" width="120" height="120" />
+      <rect class="light" x="720" y="720" width="120" height="120" />
+      <rect class="dark" x="840" y="720" width="120" height="120" />
+      <rect class="dark" x="0" y="840" width="120" height="120" />
+      <rect class="light" x="120" y="840" width="120" height="120" />
+      <rect class="dark" x="240" y="840" width="120" height="120" />
+      <rect class="light" x="360" y="840" width="120" height="120" />
+      <rect class="dark" x="480" y="840" width="120" height="120" />
+      <rect class="light" x="600" y="840" width="120" height="120" />
+      <rect class="dark" x="720" y="840" width="120" height="120" />
+      <rect class="light" x="840" y="840" width="120" height="120" />
+    </g>
+    <g text-anchor="middle" dominant-baseline="central">
+      <text class="black-piece" x="60" y="60">♜</text>
+      <text class="black-piece" x="180" y="60">♞</text>
+      <text class="black-piece" x="300" y="60">♝</text>
+      <text class="black-piece" x="420" y="60">♛</text>
+      <text class="black-piece" x="540" y="60">♚</text>
+      <text class="black-piece" x="660" y="60">♝</text>
+      <text class="black-piece" x="780" y="60">♞</text>
+      <text class="black-piece" x="900" y="60">♜</text>
+      <text class="black-piece" x="60" y="180">♟</text>
+      <text class="black-piece" x="180" y="180">♟</text>
+      <text class="black-piece" x="300" y="180">♟</text>
+      <text class="black-piece" x="420" y="180">♟</text>
+      <text class="black-piece" x="540" y="180">♟</text>
+      <text class="black-piece" x="660" y="180">♟</text>
+      <text class="black-piece" x="780" y="180">♟</text>
+      <text class="black-piece" x="900" y="180">♟</text>
+      <text class="white-piece" x="60" y="780">♙</text>
+      <text class="white-piece" x="180" y="780">♙</text>
+      <text class="white-piece" x="300" y="780">♙</text>
+      <text class="white-piece" x="420" y="780">♙</text>
+      <text class="white-piece" x="540" y="780">♙</text>
+      <text class="white-piece" x="660" y="780">♙</text>
+      <text class="white-piece" x="780" y="780">♙</text>
+      <text class="white-piece" x="900" y="780">♙</text>
+      <text class="white-piece" x="60" y="900">♖</text>
+      <text class="white-piece" x="180" y="900">♘</text>
+      <text class="white-piece" x="300" y="900">♗</text>
+      <text class="white-piece" x="420" y="900">♕</text>
+      <text class="white-piece" x="540" y="900">♔</text>
+      <text class="white-piece" x="660" y="900">♗</text>
+      <text class="white-piece" x="780" y="900">♘</text>
+      <text class="white-piece" x="900" y="900">♖</text>
+    </g>
+    <g>
+      <text class="label" x="12" y="26">8</text>
+      <text class="label" x="12" y="146">7</text>
+      <text class="label" x="12" y="266">6</text>
+      <text class="label" x="12" y="386">5</text>
+      <text class="label" x="12" y="506">4</text>
+      <text class="label" x="12" y="626">3</text>
+      <text class="label" x="12" y="746">2</text>
+      <text class="label" x="12" y="866">1</text>
+      <text class="label" x="102" y="948">a</text>
+      <text class="label" x="222" y="948">b</text>
+      <text class="label" x="342" y="948">c</text>
+      <text class="label" x="462" y="948">d</text>
+      <text class="label" x="582" y="948">e</text>
+      <text class="label" x="702" y="948">f</text>
+      <text class="label" x="822" y="948">g</text>
+      <text class="label" x="942" y="948">h</text>
+    </g>
+  </g>
+</svg>
