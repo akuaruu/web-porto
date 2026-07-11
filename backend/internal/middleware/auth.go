@@ -1,31 +1,37 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
-	"os"
 	"strings"
 	"web-porto-backend/pkg/response"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
+func RequireAuth(jwtSecret string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			response.Error(w, http.StatusUnauthorized, "Missing authorization header")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			response.Fail(w, http.StatusUnauthorized, "Missing or invalid authorization token", response.CodeUnauthorized)
 			return
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if strings.TrimSpace(tokenString) == "" {
+			response.Fail(w, http.StatusUnauthorized, "Missing or invalid authorization token", response.CodeUnauthorized)
+			return
+		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte(os.Getenv("JWT_SECRET")), nil
-
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.New("unexpected signing method")
+			}
+			return []byte(jwtSecret), nil
 		})
 
 		if err != nil || !token.Valid {
-			response.Error(w, http.StatusUnauthorized, "Invalid or expired token")
+			response.Fail(w, http.StatusUnauthorized, "Missing or invalid authorization token", response.CodeUnauthorized)
 			return
 		}
 

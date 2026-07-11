@@ -1,28 +1,28 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"web-porto-backend/pkg/response"
 )
 
-type HealthHandler struct{}
+type HealthHandler struct {
+	environment string
+}
 
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
+func NewHealthHandler(environment string) *HealthHandler {
+	return &HealthHandler{environment: environment}
 }
 
 func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowes", http.StatusMethodNotAllowed)
+		response.Fail(w, http.StatusMethodNotAllowed, "Method not allowed", response.CodeMethodNotAllowed)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":  "success",
-		"message": "Server is healthy and ready to accept requests",
-		"service": "web-porto-backend",
-	})
+	response.Success(w, http.StatusOK, map[string]any{
+		"service":     "web-porto-backend",
+		"version":     "v1",
+		"environment": h.environment,
+	}, "Server is healthy")
 }

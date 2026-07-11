@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"web-porto-backend/internal/config"
 	"web-porto-backend/internal/handler"
-	"web-porto-backend/internal/middleware"
 	"web-porto-backend/internal/repository"
+	"web-porto-backend/internal/server"
 	"web-porto-backend/internal/usecase"
 	"web-porto-backend/pkg/database"
 
@@ -17,63 +21,56 @@ import (
 func main() {
 	_ = godotenv.Load()
 
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Config error: %v", err)
+	}
+
 	dbPool, err := database.NewPostgresDB()
 	if err != nil {
-		log.Fatalf("Database connection failed: %v\n", err)
+		log.Fatalf("Database connection failed: %v", err)
 	}
 	defer dbPool.Close()
 
-	// 1. Layer Initialization (Dependency Injection)
-	userRepo := repository.NewUserRepository(dbPool)
-	authUsecase := usecase.NewAuthUsecase(userRepo)
-	authHandler := handler.NewAuthHandler(authUsecase)
-
-	projectRepo := repository.NewProjectRepository(dbPool)
-	projectUsecase := usecase.NewProjectUsecase(projectRepo)
-	projectHandler := handler.NewProjectHandler(projectUsecase)
-
-	// 2. Setup Router
-	healthHandler := handler.NewHealthHandler()
-
-	mux := http.NewServeMux()
-
-	// Auth endpoints
-	mux.HandleFunc("/api/v1/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			authHandler.Login(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	// Project endpoints
-	mux.HandleFunc("/api/v1/projects", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			projectHandler.GetFeatured(w, r)
-		case http.MethodPost:
-			middleware.RequireAuth(projectHandler.Create)(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	// Health enpoint
-	mux.HandleFunc("/api/v1/health", func(w http.ResponseWriter, r *http.Request) {
-		healthHandler.Check(w, r)
-	})
-
-	// Protection layer
-	handler := middleware.CORS(middleware.RateLimiter(middleware.Logger(mux)))
-
-	// 3. Start Server
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	if err := database.RunMigrations(context.Background(), dbPool); err != nil {
+		log.Fatalf("Migration failed: %v", err)
 	}
 
-	log.Printf("Server starting on port %s\n", port)
-	if err := http.ListenAndServe(":"+port, handler); err != nil {
-		log.Fatalf("Server error: %v\n", err)
+	userRepo := repository.NewUserRepository(dbPool)
+	projectRepo := repository.NewProjectRepository(dbPool)
+
+	authUsecase := usecase.NewAuthUsecase(userRepo, cfg.JWTSecret)
+	projectUsecase := usecase.NewProjectUsecase(projectRepo)
+	chessUsecase := usecase.NewChessUsecase()
+
+	deps := server.Dependencies{
+		Config:         cfg,
+		AuthHandler:    handler.NewAuthHandler(authUsecase),
+		ProjectHandler: handler.NewProjectHandler(projectUsecase),
+		HealthHandler:  handler.NewHealthHandler(cfg.Environment),
+		ChessHandler:   handler.NewChessHandler(chessUsecase, cfg.AllowedOrigins),
+	}
+
+	srv := server.NewHTTPServer(deps)
+	errCh := make(chan error, 1)
+
+	go func() {
+		log.Printf("Server starting on port %s", cfg.Port)
+		errCh <- srv.ListenAndServe()
+	}()
+
+	shutdownCh := make(chan os.Signal, 1)
+	signal.Notify(shutdownCh, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-errCh:
+		log.Fatalf("Server error: %v", err)
+	case sig := <-shutdownCh:
+		log.Printf("Received signal %s, shutting down", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx, srv); err != nil {
+			log.Fatalf("Graceful shutdown failed: %v", err)
+		}
 	}
 }

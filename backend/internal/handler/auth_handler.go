@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"web-porto-backend/internal/usecase"
 	"web-porto-backend/pkg/response"
@@ -22,15 +23,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.Fail(w, http.StatusBadRequest, "Invalid request body", response.CodeInvalidRequestBody)
 		return
 	}
 
-	token, err := h.usecase.Login(r.Context(), req.Username, req.Password)
+	token, expiresAt, err := h.usecase.Login(r.Context(), req.Username, req.Password)
 	if err != nil {
-		response.Error(w, http.StatusUnauthorized, err.Error())
+		if errors.Is(err, usecase.ErrValidation) {
+			response.Fail(w, http.StatusBadRequest, "Username and password are required", response.CodeValidationError)
+			return
+		}
+		response.Fail(w, http.StatusUnauthorized, "Invalid credentials", response.CodeUnauthorized)
 		return
 	}
 
-	response.Success(w, http.StatusOK, map[string]string{"token": token}, "Login successful")
+	response.Success(w, http.StatusOK, map[string]any{
+		"token":      token,
+		"expires_at": expiresAt,
+	}, "Login successful")
 }

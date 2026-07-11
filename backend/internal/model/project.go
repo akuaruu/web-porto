@@ -11,7 +11,7 @@ type Project struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	TechStack   []string  `json:"tech_stack"`
-	GithubURL   string    `json:"github_url"`
+	GithubURL   *string   `json:"github_url"`
 	LiveURL     *string   `json:"live_url"`
 	IsFeatured  bool      `json:"is_featured"`
 	CreatedAt   time.Time `json:"created_at"`
