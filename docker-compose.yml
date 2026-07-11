@@ -1,36 +1,51 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
     container_name: porto_db_container
     restart: always
-    # Docker will autmoaticly search for the .env on the same level directory
     env_file:
       - .env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   backend:
     build: ./backend
     container_name: porto_backend
+    restart: always
     env_file:
       - .env
-    ports:
-      - "8080:8080"
     depends_on:
       - db
 
   frontend:
     build: ./frontend
     container_name: porto_frontend
+    restart: always
     env_file:
       - ./frontend/.env
-    ports:
-      - "3000:3000"
     depends_on:
       - backend
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: porto_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
