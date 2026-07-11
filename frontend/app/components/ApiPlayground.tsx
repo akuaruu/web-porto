@@ -248,8 +248,7 @@ export function ApiPlayground() {
         setLoading(true);
         setResponse(null);
 
-        // Tembak 50 request sekaligus secara brutal!
-        const totalSpam = 1000;
+        const totalSpam = 50;
         const promises = Array.from({ length: totalSpam }).map(async () => {
             // Kita serang endpoint yang sedang dipilih
             const result = await executePlaygroundRequest(
@@ -492,7 +491,7 @@ export function ApiPlayground() {
                                     }`}
                             >
                                 <Zap size={13} className={loading ? "animate-spin" : "fill-current"} />
-                                Spam 1000x
+                                Test limiter
                             </motion.button>
                         </div>
 
@@ -599,7 +598,7 @@ export function ApiPlayground() {
                                                 <div className="flex items-center gap-2 mb-4 rounded-xl border border-[#f5a623]/15 bg-[#f5a623]/5 px-4 py-2.5">
                                                     <AlertCircle size={12} className="text-[#f5a623] shrink-0" />
                                                     <span className="font-mono text-[11px] text-[#f5a623]/80">
-                                                        Request failed — check your API server and CORS settings.
+                                                        Request failed - check your API server and CORS settings.
                                                     </span>
                                                 </div>
                                             )}

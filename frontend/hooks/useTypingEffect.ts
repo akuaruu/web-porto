@@ -36,8 +36,10 @@ export function useTypingEffect(
                 setCharIndex((c) => c - 1);
             }, speed / 2.2);
         } else {
-            setDeleting(false);
-            setTextIndex((i) => (i + 1) % texts.length);
+            timeout = setTimeout(() => {
+                setDeleting(false);
+                setTextIndex((i) => (i + 1) % texts.length);
+            }, 0);
         }
 
         return () => clearTimeout(timeout);

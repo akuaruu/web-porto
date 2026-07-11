@@ -6,14 +6,19 @@ export interface Project {
     description: string;
     tech_stack: string[];
     is_featured: boolean;
-    github_url?: string;
-    live_url?: string;
+    github_url: string | null;
+    live_url: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface ApiResponse<T> {
     status: "success" | "error";
-    message?: string;
-    data: T;
+    message: string;
+    data?: T;
+    error?: {
+        code: string;
+    };
 }
 
 // API Playground

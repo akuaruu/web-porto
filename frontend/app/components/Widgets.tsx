@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Activity,
@@ -11,7 +11,6 @@ import {
   Globe,
   Code2,
   Terminal,
-  Clock,
   Zap,
   ShieldAlert,
 } from "lucide-react";
@@ -177,9 +176,13 @@ export function AvailabilityWidget() {
   const [time, setTime] = useState<Date | null>(null);
 
   useEffect(() => {
-    setTime(new Date());
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
+    const updateTime = () => setTime(new Date());
+    const first = setTimeout(updateTime, 0);
+    const interval = setInterval(updateTime, 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(interval);
+    };
   }, []);
 
   return (

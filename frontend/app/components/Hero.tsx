@@ -44,7 +44,7 @@ export function Hero() {
                         ))}
                     </div>
                     <span className="ml-2 font-mono text-xs text-white/20">
-                        aruu@pop-os — zsh — 80×24
+                        aruu@pop-os - zsh - 80x24
                     </span>
                 </div>
 
